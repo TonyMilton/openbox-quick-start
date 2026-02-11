@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "weather-workflow"
+version = "0.1.0"
+description = "Weather workflow using Temporal and OpenBox"
+requires-python = ">=3.9"
+dependencies = [
+    "temporalio",
+    "openbox-temporal-sdk-python",
+    "python-dotenv",
+    "httpx",
+    "sqlalchemy[asyncio]",
+    "psycopg2-binary",
+    "alembic",
+    "pydantic",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["weather_workflow", "db"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
