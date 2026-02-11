@@ -5,9 +5,7 @@ A minimal Python project demonstrating how to integrate [OpenBox](https://openbo
 ## Setup
 
 ```bash
-python3 -m venv env
-source env/bin/activate
-pip install temporalio openbox-temporal-sdk-python python-dotenv
+uv sync
 ```
 
 Create a `.env` file in the project root:
