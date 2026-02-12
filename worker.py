@@ -1,44 +1,43 @@
-import asyncio
 import os
+import asyncio
 from dotenv import load_dotenv
 from temporalio.client import Client
-from temporalio.worker import Worker
-from temporalio import workflow
 from openbox import create_openbox_worker
-from db import init_db
 
-# Load environment variables from .env file
-load_dotenv()  # Add this line
-
-with workflow.unsafe.imports_passed_through():
-    from workflows import SayHelloWorkflow, WeatherWorkflow
-    from activities import greet, fetch_weather
+load_dotenv()
+from workflows.weather import WeatherWorkflow
+from activities.fetch_weather_activity import fetch_weather_activity
+from activities.write_database_activity import write_database_activity
 
 async def main():
-    # Initialize database
-    init_db()
+    """
+    Set up and run the Temporal worker with OpenBox governance.
+    HTTP and database operations are automatically instrumented.
+    """
+    # Create Temporal client
+    temporal_client = await Client.connect("localhost:7233")
 
-    client = await Client.connect("localhost:7233")
-
+    # Create OpenBox-wrapped worker with HTTP and database instrumentation
     worker = create_openbox_worker(
-        client=client,
-        task_queue="my-task-queue",
-        workflows=[SayHelloWorkflow, WeatherWorkflow],
-        activities=[greet, fetch_weather],
-
-        # Add OpenBox configuration
-        openbox_url=os.getenv("OPENBOX_URL"),
+        client=temporal_client,
+        task_queue="weather-tasks",
+        workflows=[WeatherWorkflow],
+        activities=[fetch_weather_activity, write_database_activity],
         openbox_api_key=os.getenv("OPENBOX_API_KEY"),
-
-        # Optional: Capture database operations
+        openbox_url=os.getenv("OPENBOX_URL"),
+        governance_timeout=30.0,
+        governance_policy="fail_open",
+        hitl_enabled=True,
+        send_start_event=True,
+        send_activity_start_event=True,
+        # Enable instrumentation
         instrument_databases=True,
-        db_libraries={"psycopg2"},  # Or None for alls
-
-        # Optional: Capture file I/O
-        instrument_file_io=True,
+        db_libraries={"sqlalchemy"},
+        instrument_file_io=False
     )
 
-    print("Worker started with weather activity registered.")
+    # Run the worker
+    print("Weather agent started. Waiting for workflows...")
     await worker.run()
 
 if __name__ == "__main__":

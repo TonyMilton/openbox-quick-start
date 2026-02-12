@@ -17,11 +17,20 @@ dev:
     temporal server start-dev &
     SERVER_PID=$!
     trap "kill $SERVER_PID 2>/dev/null" EXIT
+    # Wait for Temporal server to be ready
+    for i in {1..30}; do
+        if nc -z localhost 7233 2>/dev/null; then
+            echo "Temporal server is ready"
+            break
+        fi
+        echo "Waiting for Temporal server... ($i/30)"
+        sleep 1
+    done
     uv run python3 worker.py
 
 # Run the workflow
 run:
-    uv run python3 -m starters.hello
+    uv run python3 -m starters.weather
 
 # Run the weather workflow
 weather:
