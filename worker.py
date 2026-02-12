@@ -10,10 +10,6 @@ from activities.fetch_weather_activity import fetch_weather_activity
 from activities.write_database_activity import write_database_activity
 
 async def main():
-    """
-    Set up and run the Temporal worker with OpenBox governance.
-    HTTP and database operations are automatically instrumented.
-    """
     # Create Temporal client
     temporal_client = await Client.connect("localhost:7233")
 
